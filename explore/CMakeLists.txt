@@ -95,7 +95,6 @@ target_link_libraries(explore PUBLIC
   ${nav_msgs_TARGETS}
   ${std_msgs_TARGETS}
   ${visualization_msgs_TARGETS}
-  nav2_costmap_2d::filters
   rclcpp::rclcpp
   tf2::tf2
   tf2_ros::tf2_ros
