@@ -1,7 +1,7 @@
 #ifndef FRONTIER_SEARCH_H_
 #define FRONTIER_SEARCH_H_
 
-#include "nav2_costmap_2d/costmap_2d.hpp"
+#include <nav2_costmap_2d/costmap_2d.hpp>
 
 namespace frontier_exploration
 {

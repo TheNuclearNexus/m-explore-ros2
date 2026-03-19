@@ -5,7 +5,7 @@
 #include <geometry_msgs/msg/polygon_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include "nav2_costmap_2d/costmap_2d.hpp"
+#include <nav2_costmap_2d/costmap_2d.hpp>
 
 namespace frontier_exploration
 {

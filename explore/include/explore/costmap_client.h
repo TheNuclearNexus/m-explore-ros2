@@ -47,7 +47,7 @@
 #include <nav_msgs/msg/occupancy_grid.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include "nav2_costmap_2d/costmap_2d.hpp"
+#include <nav2_costmap_2d/costmap_2d.hpp>
 
 namespace explore
 {
