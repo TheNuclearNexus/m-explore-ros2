@@ -40,6 +40,14 @@
 
 #include <thread>
 
+inline static bool same_point(const geometry_msgs::msg::Point& one,
+                              const geometry_msgs::msg::Point& two)
+{
+  double dx = one.x - two.x;
+  double dy = one.y - two.y;
+  double dist = sqrt(dx * dx + dy * dy);
+  return dist < 0.01;
+}
 namespace explore
 {
 Explore::Explore()
@@ -82,6 +90,10 @@ Explore::Explore()
                                                                      10);
   }
 
+  resume_subscription_ = this->create_subscription<std_msgs::msg::Bool>(
+    "explore/resume", 10,
+    std::bind(&Explore::resumeCallback, this, std::placeholders::_1));
+
   RCLCPP_INFO(logger_, "Waiting to connect to move_base nav2 server");
   move_base_client_->wait_for_action_server();
   RCLCPP_INFO(logger_, "Connected to move_base nav2 server");
@@ -89,11 +101,22 @@ Explore::Explore()
   exploring_timer_ = this->create_wall_timer(
       std::chrono::milliseconds((uint16_t)(1000.0 / planner_frequency_)),
       [this]() { makePlan(); });
+  
+  makePlan();
 }
 
 Explore::~Explore()
 {
   stop();
+}
+
+void Explore::resumeCallback(const std_msgs::msg::Bool::SharedPtr msg)
+{
+  if (msg->data) {
+    resume();
+  } else {
+    stop();
+  }
 }
 
 void Explore::visualizeFrontiers(
@@ -199,7 +222,7 @@ void Explore::makePlan()
   }
 
   if (frontiers.empty()) {
-    stop();
+    stop(true);
     return;
   }
 
@@ -215,13 +238,13 @@ void Explore::makePlan()
                          return goalOnBlacklist(f.centroid);
                        });
   if (frontier == frontiers.end()) {
-    stop();
+    stop(true);
     return;
   }
   geometry_msgs::msg::Point target_position = frontier->centroid;
 
   // time out if we are not making any progress
-  bool same_goal = prev_goal_ == target_position;
+  bool same_goal = same_point(prev_goal_, target_position);
 
   prev_goal_ = target_position;
   if (!same_goal || prev_distance_ > frontier->min_distance) {
@@ -230,13 +253,16 @@ void Explore::makePlan()
     prev_distance_ = frontier->min_distance;
   }
   // black list if we've made no progress for a long time
-  if (this->now() - last_progress_ >
-      tf2::durationFromSec(progress_timeout_)) {  // TODO: is progress_timeout_
-                                                  // in seconds?
+  if ((this->now() - last_progress_ >
+      tf2::durationFromSec(progress_timeout_)) && !resuming_) {
     frontier_blacklist_.push_back(target_position);
     RCLCPP_DEBUG(logger_, "Adding current goal to black list");
     makePlan();
     return;
+  }
+  
+  if (resuming_) {
+    resuming_ = false;
   }
 
   // we don't need to do anything if we still pursuing the same goal
@@ -301,7 +327,7 @@ void Explore::reachedGoal(const NavigationGoalHandle::WrappedResult& result,
       return;
     default:
       RCLCPP_WARN(logger_, "Unknown result code from move base nav2");
-      return;
+      break;
   }
   // find new goal immediately regardless of planning frequency.
   // execute via timer to prevent dead lock in move_base_client (this is
@@ -313,7 +339,7 @@ void Explore::reachedGoal(const NavigationGoalHandle::WrappedResult& result,
 
   // TODO: Implement this with ros2 timers?
   // Because of the async nature of ros2 calls I think this is not needed.
-  // makePlan();
+  makePlan();
 }
 
 void Explore::start()
@@ -321,11 +347,24 @@ void Explore::start()
   RCLCPP_INFO(logger_, "Exploration started.");
 }
 
-void Explore::stop()
+void Explore::stop(bool finished_exploring)
 {
   move_base_client_->async_cancel_all_goals();
   exploring_timer_->cancel();
   RCLCPP_INFO(logger_, "Exploration stopped.");
+}
+
+void Explore::resume()
+{
+  resuming_ = true;
+  RCLCPP_INFO(logger_, "Exploration resuming.");
+  // auto status_msg = explore_lite_msgs::msg::ExploreStatus();
+  // status_msg.status = explore_lite_msgs::msg::ExploreStatus::EXPLORATION_IN_PROGRESS;
+  // status_pub_->publish(status_msg);
+  // Reactivate the timer
+  exploring_timer_->reset();
+  // Resume immediately
+  makePlan();
 }
 
 }  // namespace explore
