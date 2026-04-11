@@ -100,7 +100,12 @@ Explore::Explore()
 
   exploring_timer_ = this->create_wall_timer(
       std::chrono::milliseconds((uint16_t)(1000.0 / planner_frequency_)),
-      [this]() { makePlan(); });
+      [this]() { 
+        if (stopped_) {
+          return;
+        }
+        makePlan();
+      });
   
   stop();
 }
@@ -113,8 +118,10 @@ Explore::~Explore()
 void Explore::resumeCallback(const std_msgs::msg::Bool::SharedPtr msg)
 {
   if (msg->data) {
+    RCLCPP_INFO(logger_, "Resuming exploration");
     resume();
   } else {
+    RCLCPP_INFO(logger_, "Stopping exploration");
     stop();
   }
 }
@@ -349,20 +356,19 @@ void Explore::start()
 
 void Explore::stop(bool finished_exploring)
 {
+  stopped_ = true;
   move_base_client_->async_cancel_all_goals();
-  exploring_timer_->cancel();
   RCLCPP_INFO(logger_, "Exploration stopped.");
 }
 
 void Explore::resume()
 {
+  stopped_ = false;
   resuming_ = true;
   RCLCPP_INFO(logger_, "Exploration resuming.");
   // auto status_msg = explore_lite_msgs::msg::ExploreStatus();
   // status_msg.status = explore_lite_msgs::msg::ExploreStatus::EXPLORATION_IN_PROGRESS;
   // status_pub_->publish(status_msg);
-  // Reactivate the timer
-  exploring_timer_->reset();
   // Resume immediately
   makePlan();
 }

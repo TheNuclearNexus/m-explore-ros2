@@ -135,6 +135,7 @@ private:
   double progress_timeout_;
   bool visualize_;
   bool resuming_ = false;
+  bool stopped_ = false;
 };
 }  // namespace explore
 
