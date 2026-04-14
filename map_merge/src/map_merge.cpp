@@ -436,7 +436,7 @@ void MapMerge::poseEstimation()
   std::lock_guard<std::mutex> lock(pipeline_mutex_);
   pipeline_.feed(grids.begin(), grids.end());
   // TODO allow user to change feature type
-  bool success = pipeline_.estimateTransforms(combine_grids::FeatureType::AKAZE,
+  bool success = pipeline_.estimateTransforms(combine_grids::FeatureType::ORB,
                                confidence_threshold_);
   // bool success = pipeline_.estimateTransforms(combine_grids::FeatureType::SURF,
   //                              confidence_threshold_);
