@@ -98,6 +98,8 @@ bool MergingPipeline::estimateTransforms(FeatureType feature_type,
   good_indices = cv::detail::leaveBiggestComponent(
       image_features, pairwise_matches, static_cast<float>(confidence));
 
+  RCLCPP_DEBUG(logger, "%d", pairwise_matches.size());
+  RCLCPP_DEBUG(logger, "%d", good_indices.size());
   // no match found. try set first non-empty grid as reference frame. we try to
   // avoid setting empty grid as reference frame, in case some maps never
   // arrive. If all is empty just set null transforms.
