@@ -94,6 +94,10 @@ Explore::Explore()
     "explore/resume", 10,
     std::bind(&Explore::resumeCallback, this, std::placeholders::_1));
 
+  teammates_sub_ = this->create_subscription<geometry_msgs::msg::PoseArray>(
+    "teammates", 10,
+    std::bind(&Explore::teammatesCallback, this, std::placeholders::_1));
+
   RCLCPP_INFO(logger_, "Waiting to connect to move_base nav2 server");
   move_base_client_->wait_for_action_server();
   RCLCPP_INFO(logger_, "Connected to move_base nav2 server");
@@ -124,6 +128,15 @@ void Explore::resumeCallback(const std_msgs::msg::Bool::SharedPtr msg)
     RCLCPP_INFO(logger_, "Stopping exploration");
     stop();
   }
+}
+
+void Explore::teammatesCallback(const geometry_msgs::msg::PoseArray::SharedPtr msg)
+{
+  std::vector<geometry_msgs::msg::Point> teammates;
+  for (const auto& pose : msg->poses) {
+    teammates.push_back(pose.position);
+  }
+  search_.setTeammates(teammates);
 }
 
 void Explore::visualizeFrontiers(

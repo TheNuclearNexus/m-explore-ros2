@@ -44,6 +44,12 @@ public:
    */
   std::vector<Frontier> searchFrom(geometry_msgs::msg::Point position);
 
+  /**
+   * @brief Update the internal list of teammate positions
+   * @param teammates List of points where teammates are currently located
+   */
+  void setTeammates(const std::vector<geometry_msgs::msg::Point>& teammates);
+
 protected:
   /**
    * @brief Starting from an initial cell, build a frontier from valid adjacent
@@ -83,6 +89,7 @@ private:
   unsigned int size_x_, size_y_;
   double potential_scale_, gain_scale_;
   double min_frontier_size_;
+  std::vector<geometry_msgs::msg::Point> teammates_;
 };
 }  // namespace frontier_exploration
 #endif

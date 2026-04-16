@@ -192,10 +192,27 @@ bool FrontierSearch::isNewFrontierCell(unsigned int idx,
   return false;
 }
 
+void FrontierSearch::setTeammates(const std::vector<geometry_msgs::msg::Point>& teammates)
+{
+  teammates_ = teammates;
+}
+
 double FrontierSearch::frontierCost(const Frontier& frontier)
 {
-  return (potential_scale_ * frontier.min_distance *
-          costmap_->getResolution()) -
-         (gain_scale_ * frontier.size * costmap_->getResolution());
+  double cost = (potential_scale_ * frontier.min_distance *
+                 costmap_->getResolution()) -
+                (gain_scale_ * frontier.size * costmap_->getResolution());
+
+  for (const auto& teammate : teammates_) {
+    double dist = std::hypot(frontier.centroid.x - teammate.x,
+                             frontier.centroid.y - teammate.y);
+    if (dist > 0.1) {
+      cost += (10.0 / dist);
+    } else {
+      cost += 100.0;
+    }
+  }
+
+  return cost;
 }
 }  // namespace frontier_exploration

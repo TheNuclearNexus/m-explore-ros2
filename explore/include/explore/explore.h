@@ -40,6 +40,7 @@
 
 #include <explore/costmap_client.h>
 #include <explore/frontier_search.h>
+#include <geometry_msgs/msg/pose_array.hpp>
 #include <geometry_msgs/msg/pose_stamped.h>
 #include <tf2_ros/transform_listener.h>
 
@@ -122,6 +123,9 @@ private:
   
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr resume_subscription_;
   void resumeCallback(const std_msgs::msg::Bool::SharedPtr msg);
+
+  rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr teammates_sub_;
+  void teammatesCallback(const geometry_msgs::msg::PoseArray::SharedPtr msg);
 
   std::vector<geometry_msgs::msg::Point> frontier_blacklist_;
   geometry_msgs::msg::Point prev_goal_;
