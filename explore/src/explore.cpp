@@ -376,6 +376,10 @@ void Explore::stop(bool finished_exploring)
 
 void Explore::resume()
 {
+  if (!stopped_) {
+    return;
+  }
+  
   stopped_ = false;
   resuming_ = true;
   RCLCPP_INFO(logger_, "Exploration resuming.");
