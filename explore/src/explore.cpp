@@ -122,8 +122,10 @@ Explore::~Explore()
 void Explore::resumeCallback(const std_msgs::msg::Bool::SharedPtr msg)
 {
   if (msg->data) {
-    RCLCPP_INFO(logger_, "Resuming exploration");
-    resume();
+    if (stopped_) {
+      RCLCPP_INFO(logger_, "Resuming exploration");
+      resume();
+    }
   } else {
     RCLCPP_INFO(logger_, "Stopping exploration");
     stop();
@@ -379,7 +381,7 @@ void Explore::resume()
   if (!stopped_) {
     return;
   }
-  
+
   stopped_ = false;
   resuming_ = true;
   RCLCPP_INFO(logger_, "Exploration resuming.");
